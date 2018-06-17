@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>media devices</title>
+	<script type="text/javascript" src="js/jquery/jquery-3.3.1.js"></script>
+	<!-- Bootstrap -->
+	<script type="text/javascript" src="js/bootstrap4/bootstrap.js"></script>
+	<link rel="stylesheet" href="js/bootstrap4/bootstrap.css">
+	<!-- QR code -->
+	<script type="text/javascript" src="js/qrcode/grid.js"></script>
+	<script type="text/javascript" src="js/qrcode/version.js"></script>
+	<script type="text/javascript" src="js/qrcode/detector.js"></script>
+	<script type="text/javascript" src="js/qrcode/formatinf.js"></script>
+	<script type="text/javascript" src="js/qrcode/errorlevel.js"></script>
+	<script type="text/javascript" src="js/qrcode/bitmat.js"></script>
+	<script type="text/javascript" src="js/qrcode/datablock.js"></script>
+	<script type="text/javascript" src="js/qrcode/bmparser.js"></script>
+	<script type="text/javascript" src="js/qrcode/datamask.js"></script>
+	<script type="text/javascript" src="js/qrcode/rsdecoder.js"></script>
+	<script type="text/javascript" src="js/qrcode/gf256poly.js"></script>
+	<script type="text/javascript" src="js/qrcode/gf256.js"></script>
+	<script type="text/javascript" src="js/qrcode/decoder.js"></script>
+	<script type="text/javascript" src="js/qrcode/qrcode.js"></script>
+	<script type="text/javascript" src="js/qrcode/findpat.js"></script>
+	<script type="text/javascript" src="js/qrcode/alignpat.js"></script>
+	<script type="text/javascript" src="js/qrcode/databr.js"></script>
+	<!-- OCR tesseract -->
+	<script type="text/javascript" src="js/tesseract/tesseract.js"></script>
+	<script type="text/javascript" src="js/tesseract/worker.js"></script>
+	<!-- OCR ocrad -->
+	<script type="text/javascript" src="js/ocrad/ocrad.js"></script>
+	<script type="text/javascript">
+<!--
+	var localStream = null;
+	var imageCapture = null;
+
+	// Deviceリストをプルダウンに入れる
+	function getDeviceList(){
+	 	$("#camera_list").empty();
+		navigator.mediaDevices.enumerateDevices().then( function(devices) {
+			devices.forEach(function(device) {
+				console.log(device.label + ": " + device.kind + " : " + device.deviceId);
+				if (device.kind === 'videoinput') {
+		 			$("#camera_list").append( 
+		 				$('<option>').val( device.deviceId ).text( device.label + '(' + device.deviceId + ')' )
+		 			);
+				}
+			});
+		}).catch(function(err) {
+			console.error('ERROR:', err);
+		});
+	}
+
+	function startVideo() {
+		console.log('Start Video');
+		var deviceId = $("#camera_list").val();
+		var constraints = {
+			video: { deviceId: deviceId }
+		};
+		navigator.mediaDevices.getUserMedia( constraints ).then( function(stream) {
+			localStream = stream;
+			//logStream('selectedVideo', stream);
+			//var localVideo = document.getElementById('local_video')
+			//localVideo.srcObject = stream;
+			$('#local_video').get(0).srcObject = stream;
+			imageCapture = new ImageCapture( stream.getVideoTracks()[0] )
+		}).catch(function(err){
+			console.error('Err:', err);
+		});
+	}
+
+	function stopVideo() {
+		console.log('Stop Video');
+		// localVideo.pause();
+		$('#local_video').get(0).pause();
+		$('#local_video').get(0).srcObject = null;
+
+		if (localStream) {
+			//stopStream(localStream);
+			var tracks = localStream.getTracks();
+			if (! tracks) {
+				console.warn('NO tracks');
+			} else {
+				for (index in tracks) {
+					tracks[index].stop();
+				}
+			}
+			localStream = null;
+		}
+	}
+
+	function capture(){
+		if(localStream) {
+			console.log('capture');
+			var canvas = document.getElementById('canvas');
+			var ctx = canvas.getContext('2d');
+			var img = document.getElementById('img');
+
+			//videoの縦幅横幅を取得
+			var video = document.getElementById('local_video');
+			//console.log(video);
+			var w = video.offsetWidth;
+			var h = video.offsetHeight;
+			//console.log(w);
+			//console.log(h);
+
+			//同じサイズをcanvasに指定
+			canvas.setAttribute("width", w);
+			canvas.setAttribute("height", h);
+			console.log(canvas);
+
+			//canvasにコピー
+			ctx.drawImage(video, 0, 0, w, h);
+			console.log("p1");
+
+			imageCapture.takePhoto().then( blob => createImageBitmap(blob) ).then( imageBitmap => drawCanvas(canvas, imageBitmap) )
+		}
+	};
+
+	function drawCanvas(canvas, img) {
+		canvas.width = getComputedStyle(canvas).width.split('px')[0];
+		canvas.height = getComputedStyle(canvas).height.split('px')[0];
+		let ratio	= Math.min(canvas.width / img.width, canvas.height / img.height);
+		let x = (canvas.width - img.width * ratio) / 2;
+		let y = (canvas.height - img.height * ratio) / 2;
+		canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+		canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height, x, y, img.width * ratio, img.height * ratio);
+	}
+
+	function execQR() {
+			//console.log("p5");
+			//console.log(canvas.toDataURL('image/png'));
+			//console.log("p6");
+			decodeImageFromBase64( canvas.toDataURL('image/png'), function(result) {
+				console.log(result);
+				alert(result);
+			});
+	};
+
+	function decodeImageFromBase64(data, callback){
+		qrcode.callback = callback;
+		qrcode.decode(data)
+	}
+
+	function execOCR() {
+		console.log("o1");
+		var canvas = document.getElementById('canvas');
+		var string = OCRAD(canvas);
+		alert(string);
+
+		//OCRAD(document.getElementById("pic"), function(text){
+		//	document.getElementById('transcription').className = "done"
+		//	document.getElementById('transcription').innerText = text;
+		//})
+	}
+
+	function execOCR_() {
+		console.log("o1");
+
+		var canvas = document.getElementById('canvas');
+		Tesseract.recognize(canvas,{lang:"jpn"}).then(function(result){
+			console.log('result: ', result)
+			//const a = document.querySelector("#test");
+			//a.innerHTML = result.html;
+		}).progress(function(message){console.log('progress is: ', message)})
+	}
+
+	function getSelectedVideo() {
+		return $("#camera_list").val();
+	}
+
+	function logStream(msg, stream) {
+		console.log(msg + ': id=' + stream.id);
+
+		var videoTracks = stream.getVideoTracks();
+		if (videoTracks) {
+			console.log('videoTracks.length=' + videoTracks.length);
+			for (var i = 0; i < videoTracks.length; i++) {
+				var track = videoTracks[i];
+				console.log(' track.id=' + track.id);
+			}
+		}
+		var audioTracks = stream.getAudioTracks();
+		if (audioTracks) {
+			console.log('audioTracks.length=' + audioTracks.length);
+			for (var i = 0; i < audioTracks.length; i++) {
+				var track = audioTracks[i];
+				console.log(' track.id=' + track.id);
+			}
+		}
+	}
+
+	$(document).ready(function(){
+	});
+-->
+</script>
+</head>
+<body>
+	<button id="devices_button" onclick="getDeviceList()">getDevices</button>
+	<select id="camera_list"></select>
+	<br/>
+	<button id="start_button"   onclick="startVideo()">Start</button>
+	<button id="stop_button"    onclick="stopVideo()">Stop</button>
+	<button id="capture_button" onclick="capture()">Capture</button>
+	<button id="qr_button"      onclick="execQR()">QR</button>
+	<button id="ocr_button"     onclick="execOCR()">OCR</button>
+	<br/>
+	<video id="local_video" width="320px" height="240px" autoplay="1" controls="1" style="border: 1px solid;"></video>
+	<div id="container"></div>
+	<img id="img">
+	<br/>
+	<canvas id="canvas" width="320px" height="240px" style="border: 1px solid;"></canvas>
+	<br/>
+	<div style="border: 1px solid;">
+	</div>
+	<img src="test.jpg">
+	<div id="test"></div>
+	<img id="pic" src="message.png">
+	<div id="transcription"></div>
+</body>
+</html>

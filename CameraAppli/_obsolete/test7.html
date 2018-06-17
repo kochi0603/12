@@ -1,0 +1,73 @@
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>カメラ</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no" />
+    </head>
+    <body>
+        <h1>サンプル</h1>
+        <!-- mobile safariでは動作しなかった -->
+        <!-- <video id="video" width="300" height="200" autoplay="1" ></video> -->
+        <video id="video" width="400" height="300" autoplay muted playsinline></video>
+        <img id="img">
+        <div style="display:none">
+            <canvas id="canvas"></canvas>
+        </div>
+        <input type="button" id="action" value="解析" onClick='getImage()'/>
+    </body>
+
+    <script type="text/javascript">
+        navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || window.navigator.mozGetUserMedia;
+        var video = document.getElementById('video');
+        var localStream = null;
+
+        // リアカメラを使用.
+        //navigator.getUserMedia({video: true, audio: false},
+        navigator.getUserMedia(
+            {
+                audio: false,
+                video: { facingMode: { exact: "environment" } }
+            },
+            function(stream) {
+                // mobile safariでは動作しない.
+                //window.URL = window.URL || window.webkitURL;
+                //video.src = window.URL.createObjectURL(stream);
+                video.srcObject = stream;
+                localStream = stream;
+            },
+            function(err) {
+                console.log(err);
+            }
+        );
+
+        function decodeImageFromBase64(data, callback){
+            qrcode.callback = callback;
+            qrcode.decode(data)
+        }
+
+        // document.getElementById("action").addEventListener('click', function() {
+        function getImage(){
+            if(localStream) {
+                var canvas = document.getElementById('canvas');
+                var ctx = canvas.getContext('2d');
+                var img = document.getElementById('img');
+
+                //videoの縦幅横幅を取得
+                var w = video.offsetWidth;
+                var h = video.offsetHeight;
+
+                //同じサイズをcanvasに指定
+                canvas.setAttribute("width", w);
+                canvas.setAttribute("height", h);
+
+                //canvasにコピー
+                ctx.drawImage(video, 0, 0, w, h);
+
+                decodeImageFromBase64(canvas.toDataURL('image/png'), function(result) {
+                    alert(result);
+                });
+            }
+       };
+       //},false);
+    </script>
+</html>

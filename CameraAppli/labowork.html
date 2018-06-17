@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>WebRTC+Labowork</title>
+	<script type="text/javascript" src="js/jquery/jquery-3.3.1.js"></script>
+	<!-- Bootstrap -->
+	<script type="text/javascript" src="js/bootstrap4/bootstrap.js"></script>
+	<link rel="stylesheet" href="js/bootstrap4/bootstrap.css">
+	<!-- QR code 順番を変更しない事 -->
+	<script type="text/javascript" src="js/qrcode/grid.js"></script>
+	<script type="text/javascript" src="js/qrcode/version.js"></script>
+	<script type="text/javascript" src="js/qrcode/detector.js"></script>
+	<script type="text/javascript" src="js/qrcode/formatinf.js"></script>
+	<script type="text/javascript" src="js/qrcode/errorlevel.js"></script>
+	<script type="text/javascript" src="js/qrcode/bitmat.js"></script>
+	<script type="text/javascript" src="js/qrcode/datablock.js"></script>
+	<script type="text/javascript" src="js/qrcode/bmparser.js"></script>
+	<script type="text/javascript" src="js/qrcode/datamask.js"></script>
+	<script type="text/javascript" src="js/qrcode/rsdecoder.js"></script>
+	<script type="text/javascript" src="js/qrcode/gf256poly.js"></script>
+	<script type="text/javascript" src="js/qrcode/gf256.js"></script>
+	<script type="text/javascript" src="js/qrcode/decoder.js"></script>
+	<script type="text/javascript" src="js/qrcode/qrcode.js"></script>
+	<script type="text/javascript" src="js/qrcode/findpat.js"></script>
+	<script type="text/javascript" src="js/qrcode/alignpat.js"></script>
+	<script type="text/javascript" src="js/qrcode/databr.js"></script>
+	<!-- OCR ocrad -->
+	<script type="text/javascript" src="js/ocrad/ocrad.js"></script>
+	<script type="text/javascript">
+<!--
+	/*
+	* ログ出力する
+	*/
+	function outputLog(msg) {
+		console.log( msg );
+		$('#logarea').append( msg + "\n" );
+		$("#logarea").scrollTop( $("#logarea")[0].scrollHeight );
+	}
+
+	/*
+	* Deviceリストをプルダウンに入れる
+	*/
+	function getDeviceList(){
+		// 空っぽにする
+	 	$("#camera_list").empty();
+	 	// カメラ、オーディオ等のデバイスリストを取得する
+		navigator.mediaDevices.enumerateDevices().then( function( devices ) {
+			devices.forEach( function( dev ) {
+				// outputLog( dev.kind + ":" + dev.label + ":" + dev.deviceId );
+				// デバイスの種類がビデオのみプルダウンに入れる
+				if ( dev.kind === 'videoinput' ) {
+		 			$("#camera_list").append( 
+		 				$('<option>').val( dev.deviceId ).text( dev.label + '(' + dev.deviceId + ')' )
+		 			);
+				}
+			});
+		}).catch(function(err) {
+			console.error('ERROR:', err);
+		});
+	}
+
+	/*
+	* ビデオを開始する
+	*/
+	function startVideo() {
+		outputLog('Start Video');
+		// 選択されているデバイス(プルダウン)の取得
+		var deviceId = $("#camera_list").val();
+		// 使用するデバイスを指定する
+		var constraints = {
+			video: { deviceId: deviceId }
+		};
+		// ビデオストリームをDOMに紐付け
+		navigator.mediaDevices.getUserMedia( constraints ).then( function( stream ) {
+			$('#video1').get(0).srcObject = stream;
+		}).catch(function(err){
+			console.error('Err:', err);
+		});
+	}
+
+	/*
+	* ビデオを停止する
+	*/
+	function stopVideo() {
+		outputLog('Stop Video');
+		// ビデオストリームを止める
+		$('#video1').get(0).pause();
+		$('#video1').get(0).srcObject = null;
+		// ビデオストリームが止まってない時丁寧に止める
+		if ( $('#video1').get(0).srcObject ) {
+			var tracks = $('#video1').get(0).srcObject.getTracks();
+			if (! tracks) {
+				console.warn('NO tracks');
+			} else {
+				for (index in tracks) {
+					tracks[index].stop();
+				}
+			}
+			$('#video1').get(0).srcObject = null;
+		}
+	}
+
+	/*
+	* 画像としてキャプチャする
+	*/
+	function capture(){
+		outputLog('capture');
+		if( $('#video1').get(0).srcObject ) {
+			//var canvas = $('#canvas1').get(0)
+			imageCapture = new ImageCapture( $('#video1').get(0).srcObject.getVideoTracks()[0] );
+			imageCapture.takePhoto().then( blob => createImageBitmap( blob ) )
+				.then( imgObj => drawCanvas( $('#canvas1').get(0), imgObj ) )
+		}
+	};
+
+	/*
+	* キャンバスに画像を貼りつける
+	*/
+	function drawCanvas( canvasDom, imgObj ) {
+		outputLog('drawCanvas');
+		canvasDom.width  = getComputedStyle( canvasDom ).width.split('px')[0];
+		canvasDom.height = getComputedStyle( canvasDom ).height.split('px')[0];
+		var ratio = Math.min( canvasDom.width / imgObj.width, canvasDom.height / imgObj.height );
+		var x = ( canvasDom.width  - imgObj.width * ratio ) / 2;
+		var y = ( canvasDom.height - imgObj.height * ratio ) / 2;
+		canvasDom.getContext('2d').clearRect( 0, 0, canvasDom.width, canvasDom.height);
+		canvasDom.getContext('2d').drawImage( imgObj, 0, 0, imgObj.width, imgObj.height,
+			x, y, imgObj.width * ratio, imgObj.height * ratio);
+	}
+
+	/*
+	* 画像効果：グレースケール
+	*/
+	function grayscale(){
+		outputLog("grayscale");
+
+		var canvas1  = $('#canvas1').get(0);
+		var context1 = canvas.getContext("2d");
+		var imageData = context1.getImageData( 0, 0, canvas1.width, canvas1.height );
+
+		// rgbの値を計算する、α値は変更しない
+		var d = imageData.data;
+		for (var i = 0; i < d.length; i+=4) {
+			var g = d[i] * 0.2126 + d[i+1] * 0.7152 + d[i+2] * 0.0722;
+			d[i] = d[i+1] = d[i+2] = g;
+		}
+
+		var canvas2  = $('#canvas2').get(0);
+		var context2 = canvas2.getContext("2d");
+		context2.putImageData(imageData, 0, 0);
+	}
+
+	/*
+	* 画像効果：二値化
+	*/
+	function binarize(){
+		outputLog("binarize");
+
+		var canvas1  = $('#canvas1').get(0);
+		var context1 = canvas.getContext("2d");
+		var imageData = context1.getImageData(0, 0, canvas1.width, canvas1.height);
+		var threshold = $("#range").val();
+
+		// rgbの値を計算する
+		var d = imageData.data;
+		for (var i = 0; i < d.length; i+=4) {
+			var color = 0;
+			var avg = (d[i] + d[i+1] + d[i+2]) / 3;
+			if ( threshold < avg) {
+				color = 255;
+			}
+			d[i] = d[i+1] = d[i+2] = color;
+		}
+
+		var canvas2  = $('#canvas2').get(0);
+		var context2 = canvas2.getContext("2d");
+		context2.putImageData(imageData, 0, 0);
+	}
+
+	/*
+	* QRコードを解読する
+	*/
+	function decodeQR() {
+		outputLog("decodeQR");
+		//var canvas  = document.querySelector("#canvas2");
+		qrcode.callback = function( result ) {
+			outputLog( result );
+		};
+		//qrcode.decode(canvas.toDataURL('image/png'));
+		qrcode.decode( $('#canvas1').get(0).toDataURL('image/png'));
+		//outputLog( $('#canvas1').get(0).toDataURL('image/png') );
+	};
+
+	/*
+	* OCRを実行する：OCRAD
+	*/
+	function execOCR() {
+		outputLog("execOCR");
+		var string = OCRAD( $('#canvas2').get(0) );
+		outputLog( string );
+	}
+
+	$(document).ready(function(){
+		getDeviceList();
+	});
+-->
+</script>
+</head>
+<body>
+	<button id="devices_button" onclick="getDeviceList()">Devicesリスト更新</button>
+	<select id="camera_list"></select>
+	<br/>
+	<button id="start_button"   onclick="startVideo()">Start</button>
+	<button id="stop_button"    onclick="stopVideo()">Stop</button>
+	<button id="capture_button" onclick="capture()">Capture</button>
+	<button id="gr_button"      onclick="grayscale()">GR</button>
+	<p><input type="range" name="range" id="range" step="1" min="0" max="255" value="100" style="width:450px" onchange="binarize()"></p> 
+	<button id="qr_button"      onclick="decodeQR()">QR</button>
+	<button id="ocr_button"     onclick="execOCR()">OCR</button>
+	<br/>
+	<video  id="video1"  width="320px" height="240px" style="border: 1px solid;" autoplay="1" controls="1"></video>
+	<canvas id="canvas1" width="320px" height="240px" style="border: 1px solid;"></canvas>
+	<canvas id="canvas2" width="320px" height="240px" style="border: 1px solid;"></canvas>
+	<textarea id="logarea" rows="8" cols="120"></textarea>
+</body>
+</html>

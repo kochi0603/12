@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>media devices</title>
+	<script type="text/javascript" src="jquery-3.3.1.js"></script>
+	<script type="text/javascript">
+<!--
+	var localStream = null;
+	function getDeviceList() {
+	 	$("#camera_list").empty();
+		navigator.mediaDevices.enumerateDevices().then(function(devices) {
+			devices.forEach(function(device) {
+				//console.log(device.label + ": " + device.kind + " : " + device.groupId + " : " + device.deviceId);
+				console.log(device.label + ": " + device.kind + " : " + device.deviceId);
+				addDevice(device);
+			});
+		}).catch(function(err) {
+			console.error('enumerateDevide ERROR:', err);
+		});
+	}
+
+
+	function addDevice(device) {
+		if (device.kind === 'videoinput') {
+ 			$("#camera_list").append( $('<option>').val( device.deviceId ).text( device.label + '(' + device.deviceId + ')' ) );
+		}
+	}
+
+	function getSelectedVideo() {
+		return $("#camera_list").val();
+	}
+
+	function logStream(msg, stream) {
+		console.log(msg + ': id=' + stream.id);
+
+		var videoTracks = stream.getVideoTracks();
+		if (videoTracks) {
+			console.log('videoTracks.length=' + videoTracks.length);
+			for (var i = 0; i < videoTracks.length; i++) {
+				var track = videoTracks[i];
+				console.log(' track.id=' + track.id);
+			}
+		}
+		var audioTracks = stream.getAudioTracks();
+		if (audioTracks) {
+			console.log('audioTracks.length=' + audioTracks.length);
+			for (var i = 0; i < audioTracks.length; i++) {
+				var track = audioTracks[i];
+				console.log(' track.id=' + track.id);
+			}
+		}
+	}
+
+	function startSelectedVideoAudio() {
+		var deviceId = getSelectedVideo();
+		console.log('selected video device id=' + deviceId );
+		var constraints = {
+			video: { deviceId: deviceId }
+		};
+		console.log('mediaDevice.getMedia() constraints:', constraints);
+
+		navigator.mediaDevices.getUserMedia( constraints ).then( function(stream) {
+			localStream = stream;
+			logStream('selectedVideo', stream);
+			var localVideo = document.getElementById('local_video')
+			//localVideo.srcObject = stream;
+			$('#local_video').get(0).srcObject = stream;
+		}).catch(function(err){
+			console.error('getUserMedia Err:', err);
+		});
+	}
+
+	function stopVideo() {
+		// localVideo.pause();
+		$('#local_video').get(0).pause();
+		$('#local_video').get(0).srcObject = null;
+
+		if (localStream) {
+			//stopStream(localStream);
+			var tracks = localStream.getTracks();
+			if (! tracks) {
+				console.warn('NO tracks');
+			} else {
+				for (index in tracks) {
+					tracks[index].stop();
+				}
+			}
+			localStream = null;
+		}
+	}
+
+	$(document).ready(function(){
+	});
+-->
+</script>
+</head>
+<body>
+	<button id="devices_button" onclick="getDeviceList()">getDevices</button>
+	<select id="camera_list" size="1" style="width:160pt;">
+		<option>(video)</option>
+	</select>
+	<br />
+	<button id="start_video_button" onclick="startSelectedVideoAudio()">Start Selected Video/Audio</button>
+	<button id="stop_button" onclick="stopVideo()">StopVideo</button>
+	<button id="speaker_button" onclick="startFakeVideo()">start Fake video</button>
+	<br/>
+	<video id="local_video" width="320px" height="240px" autoplay="1" controls="1" style="border: 1px solid;"></video>
+	<div id="container"></div>
+</body>
+</html>

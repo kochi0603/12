@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>test</title>
+	<script type="text/javascript" src="jquery-3.3.1.js"></script>
+</head>
+<body>
+
+<div id="container" style="margin: auto;">
+	<video id="video" autoplay width="320" height="320"></video>
+	<canvas id="canvas" width="320" height="320"></canvas>
+	<button onclick="takePhoto()">写真撮影!!</button>
+	<div>
+		<video autoplay></video>
+		<button id='getUserMediaButton'>Get User Media</button>
+	</div>
+	<div>
+		<canvas id='grabFrameCanvas'></canvas>
+		<button id='grabFrameButton' disabled>Grab Frame</button>
+	</div>
+	<div>
+		<canvas id='takePhotoCanvas'></canvas>
+		<button id='takePhotoButton' disabled>Take Photo</button>
+	</div>
+
+</div>
+
+</body>
+<script>
+	let video = document.getElementById('video')
+	let canvas = document.getElementById('canvas')
+	let imageCapture
+
+	window.onload = _ => {
+		alert( navigator.mediaDevices.enumerateDevices() );
+		console.log(JSON.stringify( navigator.mediaDevices.enumerateDevices() ));
+		navigator.mediaDevices.getUserMedia( {video:true} ).then( mediaStream => { 
+			video.srcObject = mediaStream
+			let videoTrack = mediaStream.getVideoTracks()[0]
+			imageCapture = new ImageCapture(videoTrack)
+		})
+	}
+
+	let takePhoto = _ => {
+		imageCapture.takePhoto().then(blob => createImageBitmap(blob)).then(imageBitmap => drawCanvas(canvas, imageBitmap))
+	}
+
+	function drawCanvas(canvas, img) {
+		canvas.width = getComputedStyle(canvas).width.split('px')[0];
+		canvas.height = getComputedStyle(canvas).height.split('px')[0];
+		let ratio	= Math.min(canvas.width / img.width, canvas.height / img.height);
+		let x = (canvas.width - img.width * ratio) / 2;
+		let y = (canvas.height - img.height * ratio) / 2;
+		canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+		canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height,
+			x, y, img.width * ratio, img.height * ratio);
+	}
+
+	function onGetUserMediaButtonClick() {
+		alert("a");
+		navigator.mediaDevices.getUserMedia({video: true})
+		.then(mediaStream => {
+			document.querySelector('video').srcObject = mediaStream;
+			const track = mediaStream.getVideoTracks()[0];
+			imageCapture = new ImageCapture(track);
+		})
+		.catch(error => ChromeSamples.log(error));
+	}
+
+	function onGrabFrameButtonClick() {
+		imageCapture.grabFrame()
+		.then(imageBitmap => {
+			const canvas = document.querySelector('#grabFrameCanvas');
+			drawCanvas(canvas, imageBitmap);
+		})
+		.catch(error => ChromeSamples.log(error));
+	}
+
+	function onTakePhotoButtonClick() {
+		imageCapture.takePhoto()
+		.then(blob => createImageBitmap(blob))
+		.then(imageBitmap => {
+			const canvas = document.querySelector('#takePhotoCanvas');
+			drawCanvas(canvas, imageBitmap);
+		})
+		.catch(error => ChromeSamples.log(error));
+	}
+
+	document.querySelector('video').addEventListener('play', function() {
+		document.querySelector('#grabFrameButton').disabled = false;
+		document.querySelector('#takePhotoButton').disabled = false;
+	});
+
+</script>
+</html>
