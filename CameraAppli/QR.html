@@ -51,16 +51,14 @@
 				// デバイスの種類がビデオのみプルダウンに入れる
 				if ( dev.kind === 'videoinput' ) {
 				 	counter += 1;
-		 			//$("#camera_list").append( 
-		 			//	//$('<option>').val( dev.deviceId ).text( dev.label + '(' + dev.deviceId.toString().substr(0 ,10) + ')' )
-		 			//	$('<option>').val( dev.deviceId ).text( dev.label + '(' + counter + ')' )
-		 			//);
-		 			var name = 'Camera';
+		 			var name = 'Camera' + '(' + counter + ')';
 	 				if ( dev.label ){
 	 					name = dev.label;
 		 			};
-		 			$("#camera_list2").append( 
-		 				$('<button type="button">').val( dev.deviceId ).text( name + '(' + counter + ')' ).attr("class","btn btn-secondary")
+		 			$("#camera_list").append( 
+		 				$('<label class="btn btn-outline-secondary">').text( name ).append( 
+			 				$('<input type="radio">').val( dev.deviceId ).text( name ).attr("class","toggle").attr("autocomplete","off")
+		 				)
 		 			);
 				}
 			});
@@ -75,8 +73,7 @@
 	function startVideo() {
 		outputLog('Start Video');
 		// 選択されているデバイス(プルダウン)の取得
-		var deviceId = $("#camera_list2").val();
-		outputLog(deviceId);
+		var deviceId = $('#camera_list label.active input').val();
 		// 使用するデバイスを指定する
 		var constraints = {
 			video: { deviceId: deviceId }
@@ -115,7 +112,7 @@
 	* QRコードを解読する
 	*/
 	function decodeQR(){
-		outputLog('capture');
+		outputLog('decode QR');
 		if( $('#video1').get(0).srcObject ) {
 			imageCapture = new ImageCapture( $('#video1').get(0).srcObject.getVideoTracks()[0] );
 			imageCapture.takePhoto().then( blob => createImageBitmap( blob ) )
@@ -144,7 +141,8 @@
 <div class="container-fluid">
 	<div class="row">
 		<div class="col-12">
-			<div id="camera_list2" class="btn-group-vertical" role="group"></div>
+			<div id="camera_list" class="btn-group-vertical btn-group-toggle" data-toggle="buttons">
+			</div>
 		</div>
 	</div>
 	<div class="row">
