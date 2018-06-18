@@ -2,6 +2,7 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>WebRTC+Labowork</title>
 	<script type="text/javascript" src="js/jquery/jquery-3.3.1.js"></script>
 	<!-- Bootstrap -->
@@ -70,7 +71,8 @@
 	function startVideo() {
 		outputLog('Start Video');
 		// 選択されているデバイス(プルダウン)の取得
-		var deviceId = $("#camera_list").val();
+		var deviceId = $("#camera_list2").val();
+		outputLog(deviceId);
 		// 使用するデバイスを指定する
 		var constraints = {
 			video: { deviceId: deviceId }
@@ -137,31 +139,30 @@
 <body>
 <div class="container-fluid">
 	<div class="row">
-		<div class="col-sm">
-			<select id="camera_list"></select>
-		</div>
-		<div class="col-sm">
-			<div id="camera_list2" class="btn-group" role="group">
+		<div class="col-12">
+			<div id="camera_list2" class="btn-group" role="group"></div>
 		</div>
 	</div>
 	<div class="row">
-		<div class="col-sm">
+		<div class="col-5 col-offset-1">
 			<button id="start_button"  class="btn btn-primary btn-block" onclick="startVideo()">Start</button>
 		</div>
-		<div class="col-sm">
+		<div class="col-5 col-offset-1">
 			<button id="stop_button"   class="btn btn-primary btn-block" onclick="stopVideo()">Stop</button>
 		</div>
 	</div>
 	<div class="row">
-		<div class="col-sm">
+		<div class="col-12">
 			<video  id="video1"  width="400px" height="300px" class="form-control" autoplay="1" onclick="decodeQR()"></video>
 		</div>
 	</div>
 	<div class="row">
-		<textarea id="logarea" rows=6 class="form-control"></textarea>
+		<div class="col-12">
+			<textarea id="logarea" rows=6 class="form-control"></textarea>
+		</div>
 	</div>
 	<div class="row" id="test">
-		<div class="col-sm">
+		<div class="col-12">
 			<canvas id="canvas1" width="400px" height="300px" class="form-control"></canvas>
 		</div>
 	</div>
