@@ -55,12 +55,12 @@
 		 			//	//$('<option>').val( dev.deviceId ).text( dev.label + '(' + dev.deviceId.toString().substr(0 ,10) + ')' )
 		 			//	$('<option>').val( dev.deviceId ).text( dev.label + '(' + counter + ')' )
 		 			//);
+		 			var name = 'Camera';
+	 				if ( dev.label ){
+	 					name = dev.label;
+		 			}
 		 			$("#camera_list2").append( 
-		 				if ( dev.label ){
-			 				$('<button type="button">').val( dev.deviceId ).text( dev.label + '(' + counter + ')' ).attr("class","btn btn-secondary")
-			 			} else {
-			 				$('<button type="button">').val( dev.deviceId ).text( 'Camera(' + counter + ')' ).attr("class","btn btn-secondary")
-			 			}
+		 				$('<button type="button">').val( dev.deviceId ).text( name + '(' + counter + ')' ).attr("class","btn btn-secondary")
 		 			);
 				}
 			});
