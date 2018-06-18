@@ -117,11 +117,10 @@
 			imageCapture = new ImageCapture( $('#video1').get(0).srcObject.getVideoTracks()[0] );
 			imageCapture.takePhoto().then( blob => createImageBitmap( blob ) )
 				.then( function(imgObj){
-						outputLog($('#canvas1').get(0).width);
-						w = $('#canvas1').get(0).width;
-						h = $('#canvas1').get(0).height;
+						var w = $('#canvas1').get(0).width;
+						var h = $('#canvas1').get(0).height;
 						var ratio = Math.min( w / imgObj.width, h / imgObj.height );
-						outputLog( w + " " + h + " " + ratio + " " imgObj.width + " " + imgObj.height );
+						outputLog( w + " " + h + " " + ratio + " " + imgObj.width + " " + imgObj.height );
 						$('#canvas1').get(0).getContext('2d').clearRect( 0, 0, w, h );
 						$('#canvas1').get(0).getContext('2d').drawImage( imgObj, 0, 0, imgObj.width * ratio, imgObj.height * ratio );
 						qrcode.callback = function( result ) {
