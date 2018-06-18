@@ -51,12 +51,16 @@
 				// デバイスの種類がビデオのみプルダウンに入れる
 				if ( dev.kind === 'videoinput' ) {
 				 	counter += 1;
-		 			$("#camera_list").append( 
-		 				//$('<option>').val( dev.deviceId ).text( dev.label + '(' + dev.deviceId.toString().substr(0 ,10) + ')' )
-		 				$('<option>').val( dev.deviceId ).text( 'カメラ:' + dev.label + '(' + counter + ')' )
-		 			);
+		 			//$("#camera_list").append( 
+		 			//	//$('<option>').val( dev.deviceId ).text( dev.label + '(' + dev.deviceId.toString().substr(0 ,10) + ')' )
+		 			//	$('<option>').val( dev.deviceId ).text( dev.label + '(' + counter + ')' )
+		 			//);
 		 			$("#camera_list2").append( 
-		 				$('<button type="button">').val( dev.deviceId ).text( 'カメラ:' + dev.label + '(' + counter + ')' ).attr("class","btn btn-secondary")
+		 				if ( dev.label ){
+			 				$('<button type="button">').val( dev.deviceId ).text( dev.label + '(' + counter + ')' ).attr("class","btn btn-secondary")
+			 			} else {
+			 				$('<button type="button">').val( dev.deviceId ).text( 'Camera(' + counter + ')' ).attr("class","btn btn-secondary")
+			 			}
 		 			);
 				}
 			});
