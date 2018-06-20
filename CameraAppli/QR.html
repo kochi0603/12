@@ -2,6 +2,7 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>WebRTC+Labowork</title>
 	<script type="text/javascript" src="js/jquery/jquery-3.3.1.js"></script>
 	<!-- Bootstrap -->
@@ -48,8 +49,11 @@
 				// outputLog( dev.kind + ":" + dev.label + ":" + dev.deviceId );
 				// デバイスの種類がビデオのみプルダウンに入れる
 				if ( dev.kind === 'videoinput' ) {
+		 			let name = dev.label != '' ? dev.label : 'Camera';
 		 			$("#camera_list").append( 
-		 				$('<option>').val( dev.deviceId ).text( dev.label + '(' + dev.deviceId + ')' )
+		 				$('<label class="btn btn-outline-secondary">').text( name ).append( 
+			 				$('<input type="radio">').val( dev.deviceId ).text( name ).attr("class","toggle").attr("autocomplete","off")
+		 				)
 		 			);
 				}
 			});
@@ -64,7 +68,7 @@
 	function startVideo() {
 		outputLog('Start Video');
 		// 選択されているデバイス(プルダウン)の取得
-		var deviceId = $("#camera_list").val();
+		var deviceId = $('#camera_list label.active input').val();
 		// 使用するデバイスを指定する
 		var constraints = {
 			video: { deviceId: deviceId }
@@ -103,17 +107,18 @@
 	* QRコードを解読する
 	*/
 	function decodeQR(){
-		outputLog('capture');
+		outputLog('decode QR');
 		if( $('#video1').get(0).srcObject ) {
 			imageCapture = new ImageCapture( $('#video1').get(0).srcObject.getVideoTracks()[0] );
-			imageCapture.takePhoto().then( blob => createImageBitmap( blob ) )
+			imageCapture.takePhoto()
+				.then( blob => createImageBitmap( blob ) )
 				.then( function(imgObj){
 						//outputLog($('#canvas1').get(0).width);
 						w = $('#canvas1').get(0).width;
 						h = $('#canvas1').get(0).height;
 						var ratio = Math.min( w / imgObj.width, h / imgObj.height );
 						$('#canvas1').get(0).getContext('2d').clearRect( 0, 0, w, h );
-						$('#canvas1').get(0).getContext('2d').drawImage( imgObj, 0, 0, imgObj.width * ratio, imgObj.height * ratio );
+						$('#canvas1').get(0).getContext('2d').drawImage( imgObj, 0, 0, imgObj.width, imgObj.height, 0, 0, w * ratio, h * ratio );
 						qrcode.callback = function( result ) {
 							outputLog( result );
 						};
@@ -121,6 +126,31 @@
 					});
 		}
 	};
+
+	/*
+	* QRコードを解読する
+	*/
+	function autoDecodeQR(){
+		if( $('#video1').get(0).srcObject ) {
+			imageCapture = new ImageCapture( $('#video1').get(0).srcObject.getVideoTracks()[0] );
+			w = $('#canvas1').get(0).width;
+			h = $('#canvas1').get(0).height;
+			ctx = $('#canvas1').get(0).getContext('2d');
+			setInterval(() => { 
+				imageCapture.takePhoto()
+					.then( blob => createImageBitmap( blob ) )
+					.then( function(imgObj){
+							var ratio = Math.min( w / imgObj.width, h / imgObj.height );
+							ctx.clearRect( 0, 0, w, h );
+							ctx.drawImage( imgObj, 0, 0, imgObj.width, imgObj.height, 0, 0, w * ratio, h * ratio );
+							qrcode.callback = function( result ) {
+								outputLog( result );
+							};
+							qrcode.decode( $('#canvas1').get(0).toDataURL('image/png'));
+						});
+			}, 500 );
+		}
+	}
 
 	$(document).ready(function(){
 		getDeviceList();
@@ -131,28 +161,34 @@
 <body>
 <div class="container-fluid">
 	<div class="row">
-		<div class="col-sm">
-			<select id="camera_list"></select>
+		<div class="col-12">
+			<div id="camera_list" class="btn-group-vertical btn-group-toggle" data-toggle="buttons">
+			</div>
 		</div>
 	</div>
 	<div class="row">
-		<div class="col-sm">
+		<div class="col-5 col-offset-1">
 			<button id="start_button"  class="btn btn-primary btn-block" onclick="startVideo()">Start</button>
 		</div>
-		<div class="col-sm">
+		<div class="col-5 col-offset-1">
 			<button id="stop_button"   class="btn btn-primary btn-block" onclick="stopVideo()">Stop</button>
+		</div>
+		<div class="col-5 col-offset-1">
+			<button id="start_button"  class="btn btn-primary btn-block" onclick="autoDecodeQR()">Start</button>
 		</div>
 	</div>
 	<div class="row">
-		<div class="col-sm">
+		<div class="col-12">
 			<video  id="video1"  width="400px" height="300px" class="form-control" autoplay="1" onclick="decodeQR()"></video>
 		</div>
 	</div>
 	<div class="row">
-		<textarea id="logarea" rows=6 class="form-control"></textarea>
+		<div class="col-12">
+			<textarea id="logarea" rows=6 class="form-control"></textarea>
+		</div>
 	</div>
 	<div class="row" id="test">
-		<div class="col-sm">
+		<div class="col-12">
 			<canvas id="canvas1" width="400px" height="300px" class="form-control"></canvas>
 		</div>
 	</div>
