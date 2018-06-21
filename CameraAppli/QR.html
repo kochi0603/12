@@ -26,6 +26,8 @@
 	<script type="text/javascript" src="js/qrcode/findpat.js"></script>
 	<script type="text/javascript" src="js/qrcode/alignpat.js"></script>
 	<script type="text/javascript" src="js/qrcode/databr.js"></script>
+	<!-- QR code 順番を変更しない事 -->
+	<script type="text/javascript" src="js/smilesdrawer/smiles-drawer.js"></script>
 	<script type="text/javascript">
 <!--
 	/*
@@ -37,8 +39,11 @@
 		$("#logarea").scrollTop( $("#logarea")[0].scrollHeight );
 	}
 
+	// 画像キャプチャ用
+	let imageCapture = null;
+
 	/*
-	* Deviceリストをプルダウンに入れる
+	* Deviceリストの取得
 	*/
 	function getDeviceList(){
 		// 空っぽにする
@@ -49,6 +54,7 @@
 				// outputLog( dev.kind + ":" + dev.label + ":" + dev.deviceId );
 				// デバイスの種類がビデオのみプルダウンに入れる
 				if ( dev.kind === 'videoinput' ) {
+					// 表示名
 		 			let name = dev.label != '' ? dev.label : 'Camera';
 		 			$("#camera_list").append( 
 		 				$('<label class="btn btn-outline-secondary">').text( name ).append( 
@@ -67,17 +73,18 @@
 	*/
 	function startVideo() {
 		outputLog('Start Video');
-		// 選択されているデバイス(プルダウン)の取得
-		var deviceId = $('#camera_list label.active input').val();
-		// 使用するデバイスを指定する
-		var constraints = {
-			video: { deviceId: deviceId }
+		// 選択されているデバイスの取得
+		let devId = $('#camera_list label.active input').val();
+		let constraints = {
+			video: { deviceId: devId }
 		};
 		// ビデオストリームをDOMに紐付け
 		navigator.mediaDevices.getUserMedia( constraints ).then( function( stream ) {
 			$('#video1').get(0).srcObject = stream;
+			// 画像キャプチャ用
+			imageCapture = new ImageCapture( $('#video1').get(0).srcObject.getVideoTracks()[0] );
 		}).catch(function(err){
-			console.error('Err:', err);
+			console.error('ERROR:', err);
 		});
 	}
 
@@ -88,10 +95,8 @@
 		outputLog('Stop Video');
 		// ビデオストリームを止める
 		$('#video1').get(0).pause();
-		$('#video1').get(0).srcObject = null;
-		// ビデオストリームが止まってない時丁寧に止める
 		if ( $('#video1').get(0).srcObject ) {
-			var tracks = $('#video1').get(0).srcObject.getTracks();
+			let tracks = $('#video1').get(0).srcObject.getTracks();
 			if (! tracks) {
 				console.warn('NO tracks');
 			} else {
@@ -101,54 +106,64 @@
 			}
 			$('#video1').get(0).srcObject = null;
 		}
+		imageCapture = null;
 	}
+
+	// QRコードを一定間隔でキャプチャするタイマー
+	let timer1 = null;
+
+	// Smiles-Drawer用の描画オプション
+	let options = {
+		width: 300,
+		height: 300,
+		bondThickness: 0.6,
+		bondLength: 15,
+	}
+	let smilesDrawer = new SmilesDrawer.Drawer(options);
 
 	/*
 	* QRコードを解読する
 	*/
 	function decodeQR(){
-		outputLog('decode QR');
-		if( $('#video1').get(0).srcObject ) {
-			imageCapture = new ImageCapture( $('#video1').get(0).srcObject.getVideoTracks()[0] );
+		//outputLog('decode QR');
+		if( imageCapture ) {
 			imageCapture.takePhoto()
 				.then( blob => createImageBitmap( blob ) )
-				.then( function(imgObj){
-						//outputLog($('#canvas1').get(0).width);
-						w = $('#canvas1').get(0).width;
-						h = $('#canvas1').get(0).height;
-						var ratio = Math.min( w / imgObj.width, h / imgObj.height );
-						$('#canvas1').get(0).getContext('2d').clearRect( 0, 0, w, h );
-						$('#canvas1').get(0).getContext('2d').drawImage( imgObj, 0, 0, imgObj.width, imgObj.height, 0, 0, w * ratio, h * ratio );
-						qrcode.callback = function( result ) {
+				.then( function( imgObj ){
+					let canvasWidth  = $('#canvas1').get(0).width;
+					let canvasHeight = $('#canvas1').get(0).height;
+					let ratio = Math.max( canvasWidth / imgObj.width, canvasHeight / imgObj.height );
+					// キャプチャしたイメージをCANVASに貼りつける
+					$('#canvas1').get(0).getContext('2d').clearRect( 0, 0, imgObj.width, imgObj.height );
+					$('#canvas1').get(0).getContext('2d').drawImage( imgObj, 0, 0, imgObj.width, imgObj.height
+						, 0, 0, canvasWidth * ratio, canvasHeight * ratio );
+					// QRコードのデコーダに渡す
+					qrcode.callback = function( result ) {
+						if( result.indexOf('error') == 0) {
+							outputLog( "ERR:" + result );
+						} else {
 							outputLog( result );
-						};
-						qrcode.decode( $('#canvas1').get(0).toDataURL('image/png'));
-					});
+							clearInterval( timer1 );
+
+							SmilesDrawer.parse( result, function( mol ) {
+								smilesDrawer.draw( mol , 'canvas2', 'light', false);
+							});
+
+							timer1 = null;
+						}
+					};
+					qrcode.decode( $('#canvas1').get(0).toDataURL('image/png'));
+				});
 		}
 	};
 
 	/*
-	* QRコードを解読する
+	* 一定間隔でQRコードを解読する
 	*/
 	function autoDecodeQR(){
-		if( $('#video1').get(0).srcObject ) {
-			imageCapture = new ImageCapture( $('#video1').get(0).srcObject.getVideoTracks()[0] );
-			w = $('#canvas1').get(0).width;
-			h = $('#canvas1').get(0).height;
-			ctx = $('#canvas1').get(0).getContext('2d');
-			setInterval(() => { 
-				imageCapture.takePhoto()
-					.then( blob => createImageBitmap( blob ) )
-					.then( function(imgObj){
-							var ratio = Math.min( w / imgObj.width, h / imgObj.height );
-							ctx.clearRect( 0, 0, w, h );
-							ctx.drawImage( imgObj, 0, 0, imgObj.width, imgObj.height, 0, 0, w * ratio, h * ratio );
-							qrcode.callback = function( result ) {
-								outputLog( result );
-							};
-							qrcode.decode( $('#canvas1').get(0).toDataURL('image/png'));
-						});
-			}, 500 );
+		outputLog('decode QR');
+		if( imageCapture ) {
+			timer1 = setInterval( () => { decodeQR() }, 1000 );
 		}
 	}
 
@@ -168,13 +183,13 @@
 	</div>
 	<div class="row">
 		<div class="col-5 col-offset-1">
-			<button id="start_button"  class="btn btn-primary btn-block" onclick="startVideo()">Start</button>
+			<button id="start_button"  class="btn btn-primary btn-block" onclick="startVideo()">Start Video</button>
 		</div>
 		<div class="col-5 col-offset-1">
-			<button id="stop_button"   class="btn btn-primary btn-block" onclick="stopVideo()">Stop</button>
+			<button id="stop_button"   class="btn btn-primary btn-block" onclick="stopVideo()">Stop Video</button>
 		</div>
 		<div class="col-5 col-offset-1">
-			<button id="start_button"  class="btn btn-primary btn-block" onclick="autoDecodeQR()">Start</button>
+			<button id="start_button"  class="btn btn-primary btn-block" onclick="autoDecodeQR()">Auto</button>
 		</div>
 	</div>
 	<div class="row">
@@ -189,7 +204,12 @@
 	</div>
 	<div class="row" id="test">
 		<div class="col-12">
-			<canvas id="canvas1" width="400px" height="300px" class="form-control"></canvas>
+			<canvas id="canvas1" width="400px" height="300px" class="center-block"></canvas>
+		</div>
+	</div>
+	<div class="row" id="test">
+		<div class="col-12">
+			<canvas id="canvas2" width="400px" height="300px" class="center-block"></canvas>
 		</div>
 	</div>
 </div>
