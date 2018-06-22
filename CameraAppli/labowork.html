@@ -136,7 +136,7 @@
 		outputLog("grayscale");
 
 		var canvas1  = $('#canvas1').get(0);
-		var context1 = canvas.getContext("2d");
+		var context1 = canvas1.getContext("2d");
 		var imageData = context1.getImageData( 0, 0, canvas1.width, canvas1.height );
 
 		// rgbの値を計算する、α値は変更しない
@@ -158,7 +158,7 @@
 		outputLog("binarize");
 
 		var canvas1  = $('#canvas1').get(0);
-		var context1 = canvas.getContext("2d");
+		var context1 = canvas1.getContext("2d");
 		var imageData = context1.getImageData(0, 0, canvas1.width, canvas1.height);
 		var threshold = $("#range").val();
 
