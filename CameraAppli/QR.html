@@ -133,11 +133,17 @@
 				.then( function( imgObj ){
 					let canvasWidth  = $('#canvas1').get(0).width;
 					let canvasHeight = $('#canvas1').get(0).height;
-					let ratio = Math.max( canvasWidth / imgObj.width, canvasHeight / imgObj.height );
+					//let ratio = Math.max( canvasWidth / imgObj.width, canvasHeight / imgObj.height );
+					let ratio1 = canvasWidth / imgObj.width;
+					let ratio2 = imgObj.height / imgObj.width;
+					let w = canvasWidth * ratio1;
+					let h = w * ratio2;
 					// キャプチャしたイメージをCANVASに貼りつける
 					$('#canvas1').get(0).getContext('2d').clearRect( 0, 0, imgObj.width, imgObj.height );
+					//$('#canvas1').get(0).getContext('2d').drawImage( imgObj, 0, 0, imgObj.width, imgObj.height
+					//	, 0, 0, canvasWidth * ratio, canvasHeight * ratio );
 					$('#canvas1').get(0).getContext('2d').drawImage( imgObj, 0, 0, imgObj.width, imgObj.height
-						, 0, 0, canvasWidth * ratio, canvasHeight * ratio );
+						, 0, 0, w, h );
 					// QRコードのデコーダに渡す
 					qrcode.callback = function( result ) {
 						if( result.indexOf('error') == 0) {
@@ -154,16 +160,12 @@
 						}
 					};
 					qrcode.decode( $('#canvas1').get(0).toDataURL('image/png'));
-				}).catch(function(err) {
+				})
+				.catch( function(err) {
 					console.error('ERROR:', err);
 				});
 		}
 	};
-
-		}).catch(function(err) {
-			console.error('ERROR:', err);
-		});
-
 
 	/*
 	* 一定間隔でQRコードを解読する
