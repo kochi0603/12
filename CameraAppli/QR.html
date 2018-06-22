@@ -145,13 +145,13 @@
 							outputLog( "ERR:" + result );
 						} else {
 							outputLog( result );
-							clearInterval( timer1 );
-
-							SmilesDrawer.parse( result, function( mol ) {
-								smilesDrawer.draw( mol , 'canvas2', 'light', false);
-							});
-
-							timer1 = null;
+//							clearInterval( timer1 );
+//
+//							SmilesDrawer.parse( result, function( mol ) {
+//								smilesDrawer.draw( mol , 'canvas2', 'light', false);
+//							});
+//
+//							timer1 = null;
 						}
 					};
 					qrcode.decode( $('#canvas1').get(0).toDataURL('image/png'));
