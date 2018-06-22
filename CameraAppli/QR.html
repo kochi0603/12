@@ -3,6 +3,7 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="shortcut icon" href="Cam.ico" >
 	<title>WebRTC+Labowork</title>
 	<script type="text/javascript" src="js/jquery/jquery-3.3.1.js"></script>
 	<!-- Bootstrap -->
@@ -72,10 +73,9 @@
 	* ビデオを開始する
 	*/
 	function startVideo() {
-		//outputLog('Start Video');
+		outputLog('Start Video');
 		// 選択されているデバイスの取得
 		let devId = $('#camera_list label.active input').val();
-		outputLog('Start Video:'+devId);
 		let constraints = {
 			video: { deviceId: devId }
 		};
@@ -204,13 +204,11 @@
 		</div>
 	</div>
 	<div class="row">
-		<div class="col-12">
-			<canvas id="canvas1" width="400px" height="300px"></canvas>
+		<div class="col-5">
+			<canvas id="canvas1" width="400px" height="300px" class="form-control"></canvas>
 		</div>
-	</div>
-	<div class="row">
-		<div class="col-12">
-			<canvas id="canvas2" width="400px" height="300px"></canvas>
+		<div class="col-5">
+			<canvas id="canvas2" width="400px" height="300px" class="form-control"></canvas>
 		</div>
 	</div>
 </div>
