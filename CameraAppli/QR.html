@@ -3,6 +3,7 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="shortcut icon" href="Cam.ico" >
 	<title>WebRTC+Labowork</title>
 	<script type="text/javascript" src="js/jquery/jquery-3.3.1.js"></script>
 	<!-- Bootstrap -->
@@ -183,13 +184,13 @@
 		</div>
 	</div>
 	<div class="row">
-		<div class="col-3 col-offset-1">
-			<button id="start_button"  class="btn btn-primary btn-block" onclick="startVideo()">Start Video</button>
+		<div class="col-3">
+			<button id="start_button"  class="btn btn-primary btn-block" onclick="startVideo()">Start</button>
 		</div>
 		<div class="col-3 col-offset-1">
-			<button id="stop_button"   class="btn btn-primary btn-block" onclick="stopVideo()">Stop Video</button>
+			<button id="stop_button"   class="btn btn-primary btn-block" onclick="stopVideo()">Stop</button>
 		</div>
-		<div class="col-4 col-offset-1">
+		<div class="col-3 col-offset-1">
 			<button id="start_button"  class="btn btn-primary btn-block" onclick="autoDecodeQR()">Auto</button>
 		</div>
 	</div>
@@ -205,10 +206,10 @@
 	</div>
 	<div class="row">
 		<div class="col-5">
-			<canvas id="canvas1" width="400px" height="300px"></canvas>
+			<canvas id="canvas1" width="400px" height="300px" class="form-control"></canvas>
 		</div>
 		<div class="col-5">
-			<canvas id="canvas2" width="400px" height="300px"></canvas>
+			<canvas id="canvas2" width="400px" height="300px" class="form-control"></canvas>
 		</div>
 	</div>
 </div>
