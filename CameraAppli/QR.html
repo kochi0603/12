@@ -2,6 +2,7 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<!-- タブレット表示するときのおまじない -->
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="shortcut icon" href="Cam.ico" >
 	<title>WebRTC+Labowork</title>
@@ -55,7 +56,7 @@
 				// outputLog( dev.kind + ":" + dev.label + ":" + dev.deviceId );
 				// デバイスの種類がビデオのみプルダウンに入れる
 				if ( dev.kind === 'videoinput' ) {
-					// 表示名
+					// 表示名(ラベルが空欄のことがある)
 		 			let name = dev.label != '' ? dev.label : 'Camera';
 		 			$("#camera_list").append( 
 		 				$('<label class="btn btn-outline-secondary">').text( name ).append( 
@@ -79,7 +80,7 @@
 		let constraints = {
 			video: { deviceId: devId }
 		};
-		// ビデオストリームをDOMに紐付け
+		// ビデオストリームをDOMに紐付けることで画面表示される
 		navigator.mediaDevices.getUserMedia( constraints ).then( function( stream ) {
 			$('#video1').get(0).srcObject = stream;
 			// 画像キャプチャ用
@@ -110,7 +111,7 @@
 		imageCapture = null;
 	}
 
-	// QRコードを一定間隔でキャプチャするタイマー
+	// QRコードを一定間隔でキャプチャするためのタイマー
 	let timer1 = null;
 
 	// Smiles-Drawer用の描画オプション
@@ -134,12 +135,9 @@
 					//outputLog( "IMG:" + imgObj.width + " " + imgObj.height );
 					let canvasWidth  = $('#canvas1').get(0).width;
 					let canvasHeight = $('#canvas1').get(0).height;
-					//outputLog( "CAN:" + canvasWidth + " " + canvasHeight );
-					//let ratio = Math.max( canvasWidth / imgObj.width, canvasHeight / imgObj.height );
+					// タブレットで90°傾けた時に縦横比を維持するための比
 					let ratio1 = imgObj.height / imgObj.width;
-					//outputLog( "RA1:" + ratio1 );
 					let ratio2 = canvasWidth / imgObj.width;
-					//outputLog( "RA2:" + ratio2 );
 					$('#canvas1').get(0).height = canvasWidth * ratio1;
 					canvasWidth  = $('#canvas1').get(0).width;
 					canvasHeight = $('#canvas1').get(0).height;
@@ -147,12 +145,10 @@
 
 					let w = canvasWidth * ratio2;
 					let h = w * ratio1;
-					//outputLog( "FIN:" + w + " " + h );
 					// キャプチャしたイメージをCANVASに貼りつける
 					$('#canvas1').get(0).getContext('2d').clearRect( 0, 0, imgObj.width, imgObj.height );
-					//$('#canvas1').get(0).getContext('2d').drawImage( imgObj, 0, 0, imgObj.width, imgObj.height
-					//	, 0, 0, canvasWidth * ratio, canvasHeight * ratio );
 					$('#canvas1').get(0).getContext('2d').drawImage( imgObj, 0, 0, imgObj.width, imgObj.height, 0, 0, w, h );
+
 					// QRコードのデコーダに渡す
 					qrcode.callback = function( result ) {
 						if( result.indexOf('error') == 0) {
