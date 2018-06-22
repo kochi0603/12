@@ -73,9 +73,10 @@
 	* ビデオを開始する
 	*/
 	function startVideo() {
-		outputLog('Start Video');
+		//outputLog('Start Video');
 		// 選択されているデバイスの取得
 		let devId = $('#camera_list label.active input').val();
+		outputLog('Start Video:'+devId);
 		let constraints = {
 			video: { deviceId: devId }
 		};
