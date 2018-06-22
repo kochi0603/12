@@ -131,13 +131,23 @@
 			imageCapture.takePhoto()
 				.then( blob => createImageBitmap( blob ) )
 				.then( function( imgObj ){
+					outputLog( "IMG:" + imgObj.width + " " + imgObj.height );
 					let canvasWidth  = $('#canvas1').get(0).width;
 					let canvasHeight = $('#canvas1').get(0).height;
+					outputLog( "CAN:" + canvasWidth + " " + canvasHeight );
 					//let ratio = Math.max( canvasWidth / imgObj.width, canvasHeight / imgObj.height );
-					let ratio1 = canvasWidth / imgObj.width;
-					let ratio2 = imgObj.height / imgObj.width;
-					let w = canvasWidth * ratio1;
-					let h = w * ratio2;
+					let ratio1 = imgObj.height / imgObj.width;
+					outputLog( "RA1:" + ratio1 );
+					let ratio2 = canvasWidth / imgObj.width;
+					outputLog( "RA2:" + ratio2 );
+					$('#canvas1').get(0).height = canvasWidth * ratio1;
+					canvasWidth  = $('#canvas1').get(0).width;
+					canvasHeight = $('#canvas1').get(0).height;
+					outputLog( "CAN:" + canvasWidth + " " + canvasHeight );
+
+					let w = canvasWidth * ratio2;
+					let h = w * ratio1;
+					outputLog( "FIN:" + w + " " + h );
 					// キャプチャしたイメージをCANVASに貼りつける
 					$('#canvas1').get(0).getContext('2d').clearRect( 0, 0, imgObj.width, imgObj.height );
 					//$('#canvas1').get(0).getContext('2d').drawImage( imgObj, 0, 0, imgObj.width, imgObj.height
