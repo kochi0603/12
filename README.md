@@ -1,3 +1,3 @@
 # 12
 
-test
+https://kochi0603.github.io/12/CameraAppli/QR.html
