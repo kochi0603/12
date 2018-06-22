@@ -72,9 +72,10 @@
 	* ビデオを開始する
 	*/
 	function startVideo() {
-		outputLog('Start Video');
+		//outputLog('Start Video');
 		// 選択されているデバイスの取得
 		let devId = $('#camera_list label.active input').val();
+		outputLog('Start Video:'+devId);
 		let constraints = {
 			video: { deviceId: devId }
 		};
@@ -182,13 +183,13 @@
 		</div>
 	</div>
 	<div class="row">
-		<div class="col-5 col-offset-1">
+		<div class="col-3 col-offset-1">
 			<button id="start_button"  class="btn btn-primary btn-block" onclick="startVideo()">Start Video</button>
 		</div>
-		<div class="col-5 col-offset-1">
+		<div class="col-3 col-offset-1">
 			<button id="stop_button"   class="btn btn-primary btn-block" onclick="stopVideo()">Stop Video</button>
 		</div>
-		<div class="col-5 col-offset-1">
+		<div class="col-3 col-offset-1">
 			<button id="start_button"  class="btn btn-primary btn-block" onclick="autoDecodeQR()">Auto</button>
 		</div>
 	</div>
@@ -203,13 +204,11 @@
 		</div>
 	</div>
 	<div class="row" id="test">
-		<div class="col-12">
-			<canvas id="canvas1" width="400px" height="300px" class="center-block"></canvas>
+		<div class="col-5">
+			<canvas id="canvas1" width="400px" height="300px"></canvas>
 		</div>
-	</div>
-	<div class="row" id="test">
-		<div class="col-12">
-			<canvas id="canvas2" width="400px" height="300px" class="center-block"></canvas>
+		<div class="col-5">
+			<canvas id="canvas2" width="400px" height="300px"></canvas>
 		</div>
 	</div>
 </div>
