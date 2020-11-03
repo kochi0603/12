@@ -95,16 +95,9 @@
 				DrawLine( loc.bottomLeftCorner, loc.topLeftCorner, clr);
 				if ( scaned_code != code.data ){
 					OutputLog( code.data );
-					if ( code.data.indexOf('http') === 0 ){
-						$("#CODE_AREA").html( 
-							tmp.replace('XXX', code.data).replace('YYY', code.data)
-						);
-					} else {
-						$("#CODE_AREA").html( 
-							tmp.replace('XXX', 'http://10.122.69.52/raktis/W05.aspx?Bottle_CD='+code.data)
-								.replace('YYY', 'RAKTIS:' + code.data )
-						);
-					}
+					$("#CODE_AREA").html( 
+						tmp.replace('XXX', code.data).replace('YYY', code.data)
+					);
 				}
 				scaned_code = code.data;
 			};
