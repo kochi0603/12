@@ -1,0 +1,236 @@
+<html lang="jp">
+<head>
+	<meta HTTP-EQUIV="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta HTTP-EQUIV="X-UA-Compatible" content="IE=11">
+
+	<title>QRサイト</title>
+
+	<script type="text/javascript" 
+			src="/static/jQuery-3.4.1/js/jquery-3.4.1.min.js"></script>
+	<script type="text/javascript" 
+			src="/static/Popper1.15/popper.min.js"></script>
+
+	<!-- for Bootstrap4 -->
+	<link rel="stylesheet" type="text/css" 
+			href="/static/bootstrap-4.3.1-dist/css/bootstrap.min.css">
+	<script type="text/javascript" 
+			src="/static/bootstrap-4.3.1-dist/js/bootstrap.min.js"></script>
+
+	<script type="text/javascript" 
+			src="/static/jsQR/jsQR.js"></script>
+
+	<script type="text/javascript">
+<!--
+	// ログ出力する
+	function OutputLog(msg) {
+		console.log( msg );
+		$('#LOG_AREA').append( msg + "\n" );
+		$("#LOG_AREA").scrollTop( $("#LOG_AREA")[0].scrollHeight );
+	}
+
+	// Deviceリストの取得
+	function SetDeviceList(){
+		$("#CAMERAS").empty();
+		// カメラ、オーディオ等のデバイスリストを取得する
+		// Chromeだとhttps通信のみ有効、EdgeとFirefoxはhttp通信でOK
+		navigator.mediaDevices.enumerateDevices()
+			.then( function( devices ) {
+				devices.forEach( function( dev ) {
+					//for ( let key in dev ){
+					//	OutputLog( key + ":" + dev[key] )
+					//}
+					//OutputLog( dev.kind +":"+ dev.label +":"+ dev.deviceId );
+					// デバイスの種類がビデオのみプルダウンに入れる
+					if ( dev.kind === 'videoinput' ) {
+						// 表示名
+						let name = dev.label != '' ? dev.label : 'Camera';
+						$("#CAMERAS").append( 
+							$('<label class="btn btn-info">')
+								.text( name )
+								.append( $('<input type="radio">')
+								.val( dev.deviceId )
+								.attr("class","toggle")
+							)
+						);
+					}
+				});
+			}).catch(function(err) {
+				OutputLog('ERROR:'+ err);
+			});
+	};
+
+	let scaned_code = null;
+
+	function Scan() {
+		let video_obj  = $("#VIDEO").get(0);
+		let canvas_obj = $("#CANVAS").get(0);
+		if ( video_obj.readyState === video_obj.HAVE_ENOUGH_DATA 
+				&& video_obj.videoHeight > 0 ){
+			canvas_obj.height	= video_obj.videoHeight;
+			canvas_obj.width	= video_obj.videoWidth;
+			canvas_obj.getContext("2d").drawImage(
+					video_obj, 
+					0, 0, 
+					canvas_obj.width, 
+					canvas_obj.height);
+			let imageData = canvas_obj.getContext("2d").getImageData(
+					0, 0, 
+					canvas_obj.width, 
+					canvas_obj.height);
+			let code = jsQR(
+					imageData.data, 
+					imageData.width, 
+					imageData.height, 
+					{
+						inversionAttempts: "dontInvert",
+					});
+
+			if ( code ) {
+				let loc = code.location;
+				let clr = "#3BFF58";
+				let tmp = "<h4><a href='XXX' target='_blank'>YYY</a></h4>";
+				DrawLine( loc.topLeftCorner, loc.topRightCorner, clr);
+				DrawLine( loc.topRightCorner, loc.bottomRightCorner, clr);
+				DrawLine( loc.bottomRightCorner, loc.bottomLeftCorner, clr);
+				DrawLine( loc.bottomLeftCorner, loc.topLeftCorner, clr);
+				if ( scaned_code != code.data ){
+					OutputLog( code.data );
+					if ( code.data.indexOf('http') === 0 ){
+						$("#CODE_AREA").html( 
+							tmp.replace('XXX', code.data).replace('YYY', code.data)
+						);
+					} else {
+						$("#CODE_AREA").html( 
+							tmp.replace('XXX', 'http://10.122.69.52/raktis/W05.aspx?Bottle_CD='+code.data)
+								.replace('YYY', 'RAKTIS:' + code.data )
+						);
+					}
+				}
+				scaned_code = code.data;
+			};
+		};
+		requestAnimationFrame( Scan );
+	};
+
+	// ビデオを開始する
+	function StartVideo() {
+		// 選択されているデバイスの取得
+		let devId = $('#CAMERAS label.active input').val();
+		OutputLog('Start Video:'+devId);
+		let constraints = {
+				audio: false,
+				video: { 
+					deviceId: devId,
+					width: 400,
+					height: 300,
+				}
+			};
+			//	fasingMode: null
+
+		// ビデオストリームをDOMに紐付け
+		navigator.mediaDevices.getUserMedia( constraints )
+			.then( function( stream ) {
+				let video_obj  = $("#VIDEO").get(0);
+				video_obj.srcObject = stream;
+				video_obj.setAttribute("playinline", true);
+				video_obj.play();
+				requestAnimationFrame( Scan );
+			}).catch(function(err){
+				OutputLog('ERROR:'+ err);
+			});
+	};
+
+	// 認識したQRコードに枠を表示する
+	function DrawLine(begin, end, color) {
+		let canvas_obj = $("#CANVAS").get(0);
+		canvas_obj.getContext("2d").beginPath();
+		canvas_obj.getContext("2d").moveTo(begin.x, begin.y);
+		canvas_obj.getContext("2d").lineTo(end.x, end.y);
+		canvas_obj.getContext("2d").lineWidth = 4;
+		canvas_obj.getContext("2d").strokeStyle = color;
+		canvas_obj.getContext("2d").stroke();
+	};
+
+	// ビデオを停止する
+	function StopVideo() {
+		OutputLog('Stop Video');
+		let video_obj  = $("#VIDEO").get(0);
+		video_obj.pause();
+		if ( video_obj.srcObject ) {
+			let tracks = video_obj.srcObject.getTracks();
+			if (! tracks) {
+				OutputLog('Error : NO Tracks');
+			} else {
+				for (index in tracks) {
+					tracks[index].stop();
+				}
+			}
+			video_obj.srcObject = null;
+		}
+	};
+
+	$(document).ready(function(){
+		$("#VIDEO").hide();
+		SetDeviceList();
+	});
+-->
+</script>
+
+</head>
+<body style="font-size: 0.8rem;">
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-sm-auto">
+		<h4>QRコードを読み取ります(QRコードだけ)</h4>
+		<h5>コードに埋め込まれた値がURLならクリックできます</h5>
+		<h5>EdgeはOK。IEはNG。Chromeは未設定。FireFoxは不明。</h5>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-sm-auto">
+			<div id="CAMERAS" class="btn-group btn-group-toggle" 
+					data-toggle="buttons">
+			</div>
+		</div>
+		<div class="col-sm-auto">
+			<button class="btn btn-outline-primary btn-block"
+				onclick="StartVideo()">Start</button>
+		</div>
+		<div class="col-sm-auto">
+			<button class="btn btn-outline-primary btn-block"
+				onclick="StopVideo()">Stop</button>
+		</div>
+	</div>
+	<div class="row">
+		<br>
+	</div>
+
+	<div class="row">
+		<div class="col-sm-auto">
+			<video id="VIDEO" width="400px" height="300px" autoplay="1" 
+				style="border: 1px solid;" style="display:none"></video>
+		</div>
+		<div class="col-sm-auto">
+			<canvas id="CANVAS" width="400px" height="300px"
+				style="border: 1px solid;"></canvas>
+		</div>
+		<div class="col-sm-auto">
+			<div id="CODE_AREA"></div>
+		</div>
+	</div>
+	<div class="row">
+		<br>
+	</div>
+
+	<div class="row">
+		<div class="col-sm-8">
+			<textarea id="LOG_AREA" rows=6 class="form-control"></textarea>
+		</div>
+	</div>
+</div>
+
+
+</body>
+</html>
