@@ -10,5 +10,5 @@
 
 ---
 ### 参考
-# OCRなどと連携するのもアリでしょうね
+#### OCRなどと連携するのもアリでしょうね
 [https://tesseract.projectnaptha.com/](https://tesseract.projectnaptha.com/)
