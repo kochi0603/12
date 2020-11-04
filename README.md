@@ -6,9 +6,9 @@
 ### PCのカメラを使って、QRコードを読む
 ### EdgeやChromeで動作します。
 * サンプルページ
-[https://kochi0603.github.io/mishima12/QR.html](https://kochi0603.github.io/mishima12/QR.html)
+ + [https://kochi0603.github.io/mishima12/QR.html](https://kochi0603.github.io/mishima12/QR.html)
 
 ---
 ### 参考
 #### OCRなどと連携するのもアリでしょうね
-[https://tesseract.projectnaptha.com/](https://tesseract.projectnaptha.com/)
+ + [https://tesseract.projectnaptha.com/](https://tesseract.projectnaptha.com/)
