@@ -1,5 +1,5 @@
 ##### [Mishima.syk #12](https://connpass.com/event/83396/)　2018/06/23
-# 「気軽に画像認識　@tkochi0603」
+# 「気軽に画像認識」　@tkochi0603
 
 * 以前書いた記事を書き換えました。
 
