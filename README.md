@@ -3,9 +3,10 @@
 
 * 以前書いた記事を書き換えました。
 
-### サンプル
- + [https://kochi0603.github.io/mishima12/QR.html](https://kochi0603.github.io/mishima12/QR.html)
-   + PCのカメラを使って、QRコードを読むサンプルです。EdgeやChromeで動作します。
+### サンプル1
++ QRコードを読み取れるか
+  + [https://kochi0603.github.io/mishima12/QR.html](https://kochi0603.github.io/mishima12/QR.html)
+    + PCのカメラを使って、QRコードを読むサンプルです。EdgeやChromeで動作します。
 
 ---
 ### 参考
